@@ -67,7 +67,7 @@ defmodule Discordirc.IRC do
 
   def handle_info({:discordmsg, msg}, state) do
     channel = ChannelMap.irc(msg.channel_id)
-    response = Formatter.from_discord(msg.author, msg.content)
+    response = Formatter.from_discord(msg)
 
     case channel do
       {:ok, _, chan} ->

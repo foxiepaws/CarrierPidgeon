@@ -117,13 +117,34 @@ defmodule Discordirc.Formatter do
     end
   end
 
-  def from_discord(user, msg) do
-    usr = "#{user.username}\##{user.discriminator}"
+  def format_member_nick(msg) do
+    user = msg.author
+    {:ok, member} = DiscordAPI.get_guild_member(msg.guild_id, user.id())
 
-    messages =
-      msg
+    if is_binary(member.nick) do
+      member.nick
+    else
+      "#{user.username}\##{user.discriminator}"
+    end
+  end
+
+  def from_discord(msg) do
+    content = msg.content
+    attachments = msg.attachments
+    usr = format_member_nick(msg)
+
+    cpart =
+      content
       |> String.split("\n")
       |> Enum.map(&fixdiscordidstrings(&1))
+
+    apart =
+      attachments
+      |> Enum.map(& &1.url)
+
+    messages =
+      (cpart ++ apart)
+      |> Enum.filter(&(&1 != ""))
 
     # discord may give... many lines. split and format.
     case Enum.count(messages) do
