@@ -1,40 +1,37 @@
 defmodule Discordirc.ChannelMap do
+  @cmap Application.fetch_env!(:discordirc, :channels)
   def discord(network, channel) do
-    cmap = Application.fetch_env!(:discordirc, :channels)
-
     id =
-      cmap
+      @cmap
       |> Enum.filter(&(&1.ircnetwork == network and &1.ircchannel == channel))
       |> List.first()
 
     case id do
-      x when is_map(x) ->
-        {:ok, Map.get(x, :discordid)}
+      %{discordid: discordid, ircnetwork: ^network, ircchannel: ^channel} ->
+        {:ok, discordid}
 
-      nil ->
+      _ ->
         {:error, "no mapping"}
     end
   end
 
   def irc(id) do
-    cmap = Application.fetch_env!(:discordirc, :channels)
-
     channel =
-      cmap
+      @cmap
       |> Enum.filter(&(&1.discordid == id))
       |> List.first()
 
     case channel do
-      x when is_map(x) ->
-        {:ok, channel.ircnetwork, channel.ircchannel}
+      %{discordid: ^id, ircnetwork: net, ircchannel: chan} ->
+        {:ok, net, chan}
 
-      nil ->
+      _ ->
         {:error, "no mapping"}
     end
   end
 
   def getircchannels(network) do
-    Application.fetch_env!(:discordirc, :channels)
+    @cmap
     |> Enum.filter(&(&1.ircnetwork == network))
     |> Enum.map(& &1.ircchannel)
   end
