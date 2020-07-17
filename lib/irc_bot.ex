@@ -114,6 +114,16 @@ defmodule Discordirc.IRC do
     {:noreply, state}
   end
 
+  def handle_info(:disconnected, state) do
+    if state.ssl? do
+      Client.connect_ssl!(state.client, state.server, state.port)
+    else
+      Client.connect!(state.client, state.server, state.port)
+    end
+
+    {:noreply, state}
+  end
+
   def handle_info(_event, state) do
     {:noreply, state}
   end
