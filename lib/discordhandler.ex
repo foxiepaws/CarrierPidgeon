@@ -8,7 +8,9 @@ defmodule Discordirc.DiscordHandler do
   end
 
   def handle_event({:MESSAGE_CREATE, msg, _ws_state}) do
-    unless msg.author.username == "discord-irc" and msg.author.discriminator == "8465" do
+    {:ok, me} = Api.get_current_user()
+
+    unless msg.author.username == me.username and msg.author.discriminator == me.discriminator do
       case ChannelMap.irc(msg.channel_id) do
         {:ok, net, _} ->
           pid = String.to_atom(net)
