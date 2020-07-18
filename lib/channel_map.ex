@@ -7,7 +7,7 @@ defmodule Discordirc.ChannelMap do
       |> List.first()
 
     case id do
-      %{discordid: discordid, ircnetwork: ^network, ircchannel: ^channel} ->
+      %{discordid: discordid} ->
         {:ok, discordid}
 
       _ ->
@@ -22,7 +22,7 @@ defmodule Discordirc.ChannelMap do
       |> List.first()
 
     case channel do
-      %{discordid: ^id, ircnetwork: net, ircchannel: chan} ->
+      %{ircnetwork: net, ircchannel: chan} ->
         {:ok, net, chan}
 
       _ ->

@@ -1,11 +1,7 @@
 defmodule Discordirc.Formatter do
   alias Nostrum.Api, as: DiscordAPI
 
-  def from_irc(nick, msg) do
-    from_irc(nick, msg, false)
-  end
-
-  def from_irc(nick, msg, ctcp) do
+  def from_irc(nick, msg, ctcp \\ false) do
     # strip or replace IRC formatting.
     fmsg =
       msg
@@ -31,39 +27,78 @@ defmodule Discordirc.Formatter do
   defmodule DiscordUserInfo do
     defstruct id: nil, username: nil, discriminator: nil, nickname: nil
 
-    def from_id(id) do
-      {:ok, user} = DiscordAPI.get_user(id)
-      # currently we'll just use the first guild we're connected to to resolve nicks.
-      # TODO: implement mutli-guild functionality
-      g = DiscordAPI.get_current_user_guilds!() |> List.first()
-      {:ok, member} = DiscordAPI.get_guild_member(g.id(), user.id())
+    def from_id(id, guild) do
+      case DiscordAPI.get_user(id) do
+        {:ok, user} ->
+          case DiscordAPI.get_guild_member(guild, user.id()) do
+            {:error, _} ->
+              nil
 
-      %DiscordUserInfo{
-        id: id,
-        username: user.username,
-        discriminator: user.discriminator,
-        nickname: member.nick
-      }
+            {:ok, member} ->
+              %DiscordUserInfo{
+                id: id,
+                username: user.username,
+                discriminator: user.discriminator,
+                nickname: member.nick
+              }
+          end
+
+        {:error, _} ->
+          nil
+      end
+    end
+  end
+
+  defmodule DiscordChannelInfo do
+    defstruct id: nil, channel: nil
+
+    def from_id(id) do
+      case DiscordAPI.get_channel(id) do
+        {:ok, channel} ->
+          %DiscordChannelInfo{
+            id: id,
+            channel: channel.name
+          }
+
+        {:error, _} ->
+          nil
+      end
     end
   end
 
   def tryreplace(s, m) do
-    pattern = ~r/\<\@\!(\d+)\>/um
-    dui = m[:dui]
-    r = m[:str]
+    case m do
+      %{dui: nil} ->
+        s
 
-    if String.match?(s, pattern) do
-      if s == r do
-        if is_binary(dui.nickname) do
-          String.replace(s, r, dui.nickname)
+      %{cui: nil} ->
+        s
+
+      %{str: r, dui: dui} ->
+        if String.match?(s, ~r/\<\@\!(\d+)\>/) do
+          if s == r do
+            if is_binary(dui.nickname) do
+              String.replace(s, r, "@" <> dui.nickname)
+            else
+              String.replace(s, r, "@" <> dui.username <> "#" <> dui.discriminator)
+            end
+          else
+            nil
+          end
         else
-          String.replace(s, r, dui.username <> "#" <> dui.discriminator)
+          s
         end
-      else
-        nil
-      end
-    else
-      s
+
+      %{str: r, cui: cui} ->
+        if String.match?(s, ~r/\<#(\d+)\>/) do
+          if s == r do
+            String.replace(s, r, "#" <> cui.channel)
+          else
+            nil
+          end
+        else
+          s
+        end
     end
   end
 
@@ -84,59 +119,44 @@ defmodule Discordirc.Formatter do
     end
   end
 
-  def fixdiscordidstrings(content, bare \\ false) do
-    pattern = ~r/\<\@\!(\d+)\>/um
+  def fixdiscordidstrings(%{:content => content, :guild_id => guild}) do
+    pattern = ~r/\<(\@\!|#)(\d+)\>/um
 
     matches =
       Regex.scan(pattern, content)
       |> Enum.uniq()
-      |> Enum.map(fn x ->
-        [
-          str: List.first(x),
-          id: List.last(x),
-          dui: DiscordUserInfo.from_id(String.to_integer(List.last(x)))
-        ]
+      |> Enum.map(fn
+        [fst, "@!", lst] ->
+          %{str: fst, id: lst, dui: DiscordUserInfo.from_id(String.to_integer(lst), guild)}
+
+        [fst, "#", lst] ->
+          %{str: fst, id: lst, cui: DiscordChannelInfo.from_id(String.to_integer(lst))}
       end)
 
     unless matches == [] do
-      if bare do
-        doallreplacements(
-          Regex.split(pattern, content, include_captures: true),
-          matches,
-          {"", matches}
-        )
-      else
-        doallreplacements(
-          Regex.split(pattern, content, include_captures: true),
-          matches,
-          {"@", matches}
-        )
-      end
+      doallreplacements(
+        Regex.split(pattern, content, include_captures: true),
+        matches,
+        {"", matches}
+      )
     else
       content
-    end
-  end
-
-  def format_member_nick(msg) do
-    user = msg.author
-    {:ok, member} = DiscordAPI.get_guild_member(msg.guild_id, user.id())
-
-    if is_binary(member.nick) do
-      member.nick
-    else
-      "#{user.username}\##{user.discriminator}"
     end
   end
 
   def from_discord(msg) do
-    content = msg.content
-    attachments = msg.attachments
-    usr = format_member_nick(msg)
+    %{attachments: attachments, author: user, guild_id: guild} = msg
+
+    usr =
+      case DiscordAPI.get_guild_member(guild, user.id) do
+        {:ok, %{nick: nick}} when is_binary(nick) -> nick
+        _ -> "#{user.username}\##{user.discriminator}"
+      end
 
     cpart =
-      content
+      msg
+      |> fixdiscordidstrings
       |> String.split("\n")
-      |> Enum.map(&fixdiscordidstrings(&1))
 
     apart =
       attachments
