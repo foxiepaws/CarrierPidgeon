@@ -1,4 +1,5 @@
 defmodule Discordirc do
+  @networks Application.get_env(:discordirc, :networks)
   use Application
 
   alias Discordirc.IRC
@@ -6,8 +7,7 @@ defmodule Discordirc do
   def start(_type, _args) do
     import Supervisor.Spec
 
-    ircnets =
-      Application.get_env(:discordirc, :networks) |> Enum.map(fn net -> worker(IRC, [net]) end)
+    ircnets = @networks |> Enum.map(fn net -> worker(IRC, [net], id: net.network) end)
 
     children =
       ircnets ++
