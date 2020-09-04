@@ -12,14 +12,14 @@ defmodule Discordirc.Formatter do
     case ctcp do
       true ->
         case fmsg do
-          x when is_binary(x) -> "\\* #{nick} _#{x}_"
-          x when is_list(x) -> "\\* #{nick} _#{List.to_string(x)}_"
+          x when is_binary(x) -> "_#{x}_"
+          x when is_list(x) -> "_#{List.to_string(x)}_"
         end
 
       false ->
         case fmsg do
-          x when is_binary(x) -> "<#{nick}> #{x}"
-          x when is_list(x) -> "<#{nick}> #{List.to_string(x)}"
+          x when is_binary(x) -> "#{x}"
+          x when is_list(x) -> "#{List.to_string(x)}"
         end
     end
   end

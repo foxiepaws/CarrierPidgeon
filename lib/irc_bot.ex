@@ -37,7 +37,7 @@ defmodule Discordirc.IRC do
 
   def init([state]) do
     {:ok, client} = ExIRC.start_link!()
-
+    Process.flag(:trap_exit, true)
     Client.add_handler(client, self())
 
     Logger.debug(
@@ -96,7 +96,10 @@ defmodule Discordirc.IRC do
 
     case discordid do
       {:ok, x} ->
-        DiscordAPI.create_message(x, fmsg)
+        send(
+          :WebhookService,
+          {:irc, %{channel_id: x, nick: "#{nick}@#{state.network}", content: fmsg}}
+        )
     end
 
     {:noreply, state}
@@ -108,7 +111,10 @@ defmodule Discordirc.IRC do
 
     case discordid do
       {:ok, x} ->
-        DiscordAPI.create_message(x, fmsg)
+        send(
+          :WebhookService,
+          {:irc, %{channel_id: x, nick: "#{nick}@#{state.network}", content: fmsg}}
+        )
     end
 
     {:noreply, state}
