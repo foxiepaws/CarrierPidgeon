@@ -16,7 +16,7 @@ defmodule Discordirc.DiscordHandler do
 
     is_my_webhook =
       if is_webhook do
-        {:ok, wh} = api.get_webhook(msg.webhook_id)
+        {:ok, wh} = Api.get_webhook(msg.webhook_id)
         wh.user.id == nostrum.snowflake.dump(me.id)
       else
         false
