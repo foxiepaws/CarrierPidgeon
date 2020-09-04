@@ -87,6 +87,8 @@ defmodule Discordirc.WebhookService do
     rescue
       e in MatchError ->
 	Logger.warn("MatchError from nostrum workaround in place.")
+      e in FunctionClauseError ->
+	Logger.warn("FunctionClauseError from nostrum workaround in place.")
     end
 
     {:noreply, state}
