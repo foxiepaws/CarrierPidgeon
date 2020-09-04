@@ -9,7 +9,7 @@ defmodule Discordirc.DiscordHandler do
 
 
   def is_me_or_my_webhook(msg) do
-    {:ok, me} = api.get_current_user()
+    {:ok, me} = Api.get_current_user()
 
     is_me = msg.author.username == me.username and msg.author.discriminator == me.discriminator
     is_webhook = msg.webhook_id != nil
