@@ -5,15 +5,19 @@ defmodule Discordirc.DiscordInfo do
   alias Nostrum.Api
 
   def get_nick_by_id(guild_id, id) do
-    {:ok, user} = Api.get_user(id)
-    {:ok, member} = Api.get_guild_member(guild_id, id)
-    member.nick
+    case Api.get_guild_member(guild_id, id) do
+      {:ok, x = %{nick: nil}} ->
+	"#{x.user.username}##{x.user.discriminator}"
+      {:ok, %{nick: n}} ->
+	n
+    end
   end
-  
+
   def get_username_by_id(id) do
     {:ok, %{username: u, discriminator: d}} = Api.get_user(id)
     "#{u}##{d}"
   end
+
   def get_channel_name_by_id(id) do
   {:ok, %{name: c}} = Api.get_channel(id)
   c
