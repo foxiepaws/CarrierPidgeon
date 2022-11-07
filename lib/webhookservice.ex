@@ -55,10 +55,12 @@ defmodule Discordirc.WebhookService do
 
             30_007 when retry >= 1 ->
               raise "too many webhooks"
+
             40_001 ->
               raise "no permissions"
-	    50_035 ->
-	      raise "invalid form body"
+
+            50_035 ->
+              raise "invalid form body"
           end
       end
     end
