@@ -40,15 +40,11 @@ defmodule Discordirc.IRC do
     Process.flag(:trap_exit, true)
     Client.add_handler(client, self())
 
-    Logger.debug(
-      "connecting #{
-        if state.ssl? do
-          "ssl"
-        else
-          "unsecured"
-        end
-      } on #{state.network} (#{state.server} #{state.port})"
-    )
+    Logger.debug("connecting #{if state.ssl? do
+      "ssl"
+    else
+      "unsecured"
+    end} on #{state.network} (#{state.server} #{state.port})")
 
     if state.ssl? do
       Client.connect_ssl!(client, state.server, state.port)
@@ -65,18 +61,73 @@ defmodule Discordirc.IRC do
     {:noreply, state}
   end
 
+  def ircsplit(str, pfxlen) do
+    str
+    |> String.split(" ")
+    |> Enum.chunk_while(
+      [],
+      fn ele, acc ->
+        if Enum.join(Enum.reverse([ele | acc]), " ") |> String.length() > 512 - pfxlen do
+          {:cont, Enum.reverse(acc), [ele]}
+        else
+          {:cont, [ele | acc]}
+        end
+      end,
+      fn
+        [] -> {:cont, []}
+        acc -> {:cont, Enum.reverse(acc), []}
+      end
+    )
+    |> Enum.map(fn x -> Enum.join(x, " ") end)
+    |> Enum.map(fn x ->
+      case String.length(x) do
+        n when is_integer(n) and n > 512 ->
+          x
+          |> String.to_charlist()
+          |> Enum.chunk_every(512 - pfxlen)
+          |> Enum.map(&List.to_string(&1))
+
+        _ ->
+          x
+      end
+    end)
+    |> List.flatten()
+    |> Enum.filter(&(&1 !== ""))
+  end
+
+  def discord_ircsplit(msg, nick, target) do
+    pfx = "PRIVMSG #{target} :" |> String.length()
+    nkl = "<#{nick}> " |> String.length()
+    msg
+    |> String.split("\n")
+    |> Enum.map(&ircsplit(&1, pfx+nkl))
+    |> List.flatten()
+  end
+
   def handle_info({:discordmsg, msg}, state) do
     channel = ChannelMap.irc(msg.channel_id)
-    response = Formatter.from_discord(msg)
+    {usr, response} = Formatter.from_discord(msg)
 
     case channel do
       {:ok, _, chan} ->
-        case response do
+        # irc messages can only be 512b in length 
+        split_response =
+          case response do
+            x when is_binary(x) ->
+              discord_ircsplit(x, usr, chan)
+
+            x when is_list(x) ->
+              x
+              |> Enum.map(&discord_ircsplit(&1, usr, chan))
+              |> List.flatten()
+          end
+
+        case split_response do
           x when is_binary(x) ->
-            ExIRC.Client.msg(state.client, :privmsg, chan, x)
+            ExIRC.Client.msg(state.client, :privmsg, chan, "<#{usr}> #{x}")
 
           x when is_list(x) ->
-            for m <- x, do: ExIRC.Client.msg(state.client, :privmsg, chan, m)
+            for m <- x, do: ExIRC.Client.msg(state.client, :privmsg, chan, "<#{usr}> #{m}")
         end
     end
 
@@ -120,22 +171,28 @@ defmodule Discordirc.IRC do
     {:noreply, state}
   end
 
+  # lets try using the supervisor instead... 
   def handle_info(:disconnected, state) do
-    if state.ssl? do
-      Client.connect_ssl!(state.client, state.server, state.port)
-    else
-      Client.connect!(state.client, state.server, state.port)
-    end
-
-    {:noreply, state}
+    Logger.debug("Disconnected, throwing self to hell.")
+    {:stop, "disconnection", state}
   end
+
+  #  def handle_info(:disconnected, state) do
+  #    if state.ssl? do
+  #      Client.connect_ssl!(state.client, state.server, state.port)
+  #    else
+  #      Client.connect!(state.client, state.server, state.port)
+  #    end
+  #
+  #    {:noreply, state}
+  #  end
 
   def handle_info(_event, state) do
     {:noreply, state}
   end
 
   def terminate(_, state) do
-    Logger.debug("Qutting..")
+    Logger.debug("Qutting...")
     Client.quit(state.client, "discordirc.ex")
     Client.stop!(state.client)
     :ok

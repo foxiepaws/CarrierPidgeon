@@ -75,7 +75,7 @@ defmodule Discordirc.Formatter do
         s
 
       %{str: r, dui: dui} ->
-        if String.match?(s, ~r/\<\@\!(\d+)\>/) do
+        if String.match?(s, ~r/\<\@(\d+)\>/) do
           if s == r do
             if is_binary(dui.nickname) do
               String.replace(s, r, "@" <> dui.nickname)
@@ -120,12 +120,15 @@ defmodule Discordirc.Formatter do
   end
 
   def fixdiscordidstrings(%{:content => content, :guild_id => guild}) do
-    pattern = ~r/\<(\@\!|#)(\d+)\>/um
+    pattern = ~r/\<(\@!?|#)(\d+)\>/um
 
     matches =
       Regex.scan(pattern, content)
       |> Enum.uniq()
       |> Enum.map(fn
+        [fst, "@", lst] ->
+          %{str: fst, id: lst, dui: DiscordUserInfo.from_id(String.to_integer(lst), guild)}
+
         [fst, "@!", lst] ->
           %{str: fst, id: lst, dui: DiscordUserInfo.from_id(String.to_integer(lst), guild)}
 
@@ -169,11 +172,12 @@ defmodule Discordirc.Formatter do
     # discord may give... many lines. split and format.
     case Enum.count(messages) do
       0 ->
-        "<#{usr}> #{messages[0]}"
+        {usr, "#{messages[0]}"}
 
       _ ->
-        messages
-        |> Enum.map(fn m -> "<#{usr}> #{m}" end)
+        {usr,
+         messages
+         |> Enum.map(fn m -> "#{m}" end)}
     end
   end
 end

@@ -25,8 +25,8 @@ defmodule Discordirc.WebhookService do
 
       case DiscordAPI.create_webhook(
              channel_id,
-             %{name: "otherbot hook", avatar: avatar},
-             "otherbot proxy hook"
+             %{name: "discordirc hook", avatar: avatar},
+             "discordirc proxy hook"
            ) do
         {:ok, hook} ->
           case state.hooks do
@@ -86,12 +86,12 @@ defmodule Discordirc.WebhookService do
       DiscordAPI.execute_webhook(wh.id, wh.token, args)
     rescue
       e in MatchError ->
-	Logger.warn("MatchError from nostrum workaround in place.")
+        Logger.warn("MatchError from nostrum workaround in place.")
+
       e in FunctionClauseError ->
-	Logger.warn("FunctionClauseError from nostrum workaround in place.")
+        Logger.warn("FunctionClauseError from nostrum workaround in place.")
     end
 
     {:noreply, state}
   end
-
 end

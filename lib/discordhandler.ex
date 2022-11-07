@@ -7,7 +7,6 @@ defmodule Discordirc.DiscordHandler do
     Consumer.start_link(__MODULE__)
   end
 
-
   def is_me_or_my_webhook(msg) do
     {:ok, me} = Api.get_current_user()
 

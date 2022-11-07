@@ -13,7 +13,7 @@ defmodule Discordirc do
       ircnets ++
         [
           Discordirc.DiscordHandler,
-	  Discordirc.WebhookService
+          Discordirc.WebhookService
         ]
 
     options = [strategy: :one_for_one, name: Discordirc.Supervisor]
