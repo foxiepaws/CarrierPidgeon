@@ -1,4 +1,7 @@
 defmodule Discordirc.IRC do
+  @moduledoc """
+  IRC bot portion
+  """
   use GenServer
   require Logger
 
@@ -98,9 +101,10 @@ defmodule Discordirc.IRC do
   def discord_ircsplit(msg, nick, target) do
     pfx = "PRIVMSG #{target} :" |> String.length()
     nkl = "<#{nick}> " |> String.length()
+
     msg
     |> String.split("\n")
-    |> Enum.map(&ircsplit(&1, pfx+nkl))
+    |> Enum.map(&ircsplit(&1, pfx + nkl))
     |> List.flatten()
   end
 

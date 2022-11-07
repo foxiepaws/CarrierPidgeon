@@ -1,8 +1,10 @@
 defmodule Discordirc.ChannelMap do
-  @cmap Application.fetch_env!(:discordirc, :channels)
+  @moduledoc """
+  maps discord channels to irc channels
+  """
   def discord(network, channel) do
     id =
-      @cmap
+      Application.fetch_env!(:discordirc, :channels)
       |> Enum.filter(&(&1.ircnetwork == network and &1.ircchannel == channel))
       |> List.first()
 
@@ -17,7 +19,7 @@ defmodule Discordirc.ChannelMap do
 
   def irc(id) do
     channel =
-      @cmap
+      Application.fetch_env!(:discordirc, :channels)
       |> Enum.filter(&(&1.discordid == id))
       |> List.first()
 
@@ -31,7 +33,7 @@ defmodule Discordirc.ChannelMap do
   end
 
   def getircchannels(network) do
-    @cmap
+    Application.fetch_env!(:discordirc, :channels)
     |> Enum.filter(&(&1.ircnetwork == network))
     |> Enum.map(& &1.ircchannel)
   end

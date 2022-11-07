@@ -1,4 +1,8 @@
 defmodule Discordirc.WebhookService do
+  @moduledoc """
+  This module manages the webhooks that we output
+  to discord channels with
+  """
   use GenServer
   require Logger
   alias Nostrum.Api, as: DiscordAPI
@@ -11,11 +15,13 @@ defmodule Discordirc.WebhookService do
     def clear_old_hooks(channel_id) do
       {:ok, webhooks} = DiscordAPI.get_channel_webhooks(channel_id)
 
-      webhooks
-      |> Enum.filter(fn wh ->
-        wh.user.id == Nostrum.Snowflake.dump(DiscordAPI.get_current_user!().id)
-      end)
-      |> Enum.map(&DiscordAPI.delete_webhook(&1.id, "clearing old hooks"))
+      deadhooks =
+        webhooks
+        |> Enum.filter(fn wh ->
+          wh.user.id == Nostrum.Snowflake.dump(DiscordAPI.get_current_user!().id)
+        end)
+
+      for h <- deadhooks, do: DiscordAPI.delete_webhook(h.id, "clearing old hooks")
 
       :ok
     end
@@ -40,19 +46,19 @@ defmodule Discordirc.WebhookService do
 
         {:error, e} ->
           case e.response.code do
-            10003 ->
+            10_003 ->
               raise "unknown channel"
 
-            30007 ->
-              if retry < 1 do
-                clear_old_hooks(channel_id)
-                create_hook(state, channel_id, retry + 1)
-              else
-                raise "too many webhooks"
-              end
+            30_007 when retry < 1 ->
+              clear_old_hooks(channel_id)
+              create_hook(state, channel_id, retry + 1)
 
-            40001 ->
+            30_007 when retry >= 1 ->
+              raise "too many webhooks"
+            40_001 ->
               raise "no permissions"
+	    50_035 ->
+	      raise "invalid form body"
           end
       end
     end

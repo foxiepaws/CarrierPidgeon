@@ -1,4 +1,7 @@
 defmodule Discordirc.DiscordHandler do
+  @moduledoc """
+  discord bot
+  """
   use Nostrum.Consumer
   alias Nostrum.Api
   alias Discordirc.ChannelMap

@@ -1,4 +1,7 @@
 defmodule Discordirc.Formatter do
+  @moduledoc """
+  Transforms messages to/from discord from/to irc
+  """
   alias Nostrum.Api, as: DiscordAPI
 
   def from_irc(nick, msg, ctcp \\ false) do
@@ -136,14 +139,14 @@ defmodule Discordirc.Formatter do
           %{str: fst, id: lst, cui: DiscordChannelInfo.from_id(String.to_integer(lst))}
       end)
 
-    unless matches == [] do
+    if matches == [] do
+      content
+    else
       doallreplacements(
         Regex.split(pattern, content, include_captures: true),
         matches,
         {"", matches}
       )
-    else
-      content
     end
   end
 
