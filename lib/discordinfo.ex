@@ -6,8 +6,8 @@ defmodule Discordirc.DiscordInfo do
 
   def get_nick_by_id(guild_id, id) do
     case Api.get_guild_member(guild_id, id) do
-      {:ok, x = %{nick: nil}} ->
-        "#{x.user.username}##{x.user.discriminator}"
+      {:ok, %{nick: nil, user: %{username: u, discriminator: d}}} ->
+        "#{u}##{d}"
 
       {:ok, %{nick: n}} ->
         n
