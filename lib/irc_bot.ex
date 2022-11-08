@@ -138,6 +138,15 @@ defmodule Discordirc.IRC do
     {:noreply, state}
   end
 
+  def handle_info({:discord_cmd, :kick, users}) do
+  end
+  def handle_info({:discord_cmd, :ban, users}) do
+  end
+  def handle_info({:discord_cmd, :mode, modestr}) do
+  end
+  def handle_info({:discord_cmd, :topic, topic}) do
+  end
+  
   def handle_info({:connected, server, port}, state) do
     Logger.debug("Connected to #{server}:#{port}")
     Logger.debug("Logging to #{server}:#{port} as #{state.nick}..")
