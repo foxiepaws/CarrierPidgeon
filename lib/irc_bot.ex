@@ -70,7 +70,7 @@ defmodule Discordirc.IRC do
     |> Enum.chunk_while(
       [],
       fn ele, acc ->
-        if Enum.join(Enum.reverse([ele | acc]), " ") |> String.length() > 512 - pfxlen do
+        if Enum.join(Enum.reverse([ele | acc]), " ") |> byte_size() > 512 - pfxlen do
           {:cont, Enum.reverse(acc), [ele]}
         else
           {:cont, [ele | acc]}
@@ -83,7 +83,7 @@ defmodule Discordirc.IRC do
     )
     |> Enum.map(fn x -> Enum.join(x, " ") end)
     |> Enum.map(fn x ->
-      case String.length(x) do
+      case byte_size(x) do
         n when is_integer(n) and n > 512 ->
           x
           |> String.to_charlist()
@@ -99,8 +99,8 @@ defmodule Discordirc.IRC do
   end
 
   def discord_ircsplit(msg, nick, target) do
-    pfx = "PRIVMSG #{target} :" |> String.length()
-    nkl = "<#{nick}> " |> String.length()
+    pfx = "PRIVMSG #{target} :" |> byte_size()
+    nkl = "<#{nick}> " |> byte_size()
 
     msg
     |> String.split("\n")
@@ -140,13 +140,16 @@ defmodule Discordirc.IRC do
 
   def handle_info({:discord_cmd, :kick, users}) do
   end
+
   def handle_info({:discord_cmd, :ban, users}) do
   end
+
   def handle_info({:discord_cmd, :mode, modestr}) do
   end
+
   def handle_info({:discord_cmd, :topic, topic}) do
   end
-  
+
   def handle_info({:connected, server, port}, state) do
     Logger.debug("Connected to #{server}:#{port}")
     Logger.debug("Logging to #{server}:#{port} as #{state.nick}..")
