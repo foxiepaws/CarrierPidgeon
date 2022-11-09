@@ -4,6 +4,7 @@ defmodule Discordirc.IRC do
   """
   use GenServer
   require Logger
+  import Discordirc.ByteSplit
 
   defmodule State do
     defstruct server: nil,
@@ -15,7 +16,8 @@ defmodule Discordirc.IRC do
               name: nil,
               channels: nil,
               client: nil,
-              network: nil
+              network: nil,
+              me: nil
 
     def from_params(params) when is_map(params) do
       Enum.reduce(params, %State{}, fn {k, v}, acc ->
@@ -29,6 +31,7 @@ defmodule Discordirc.IRC do
 
   alias ExIRC.Client
   alias ExIRC.SenderInfo
+  alias ExIRC.Whois
   alias Discordirc.ChannelMap
   alias Discordirc.Formatter
   alias Nostrum.Api, as: DiscordAPI
@@ -60,52 +63,9 @@ defmodule Discordirc.IRC do
 
   def handle_info(:logged_in, state) do
     Logger.debug("Logged in to #{state.server}:#{state.port}")
+    Client.whois(state.client, state.nick)
     for c <- state.channels, do: Client.join(state.client, c)
     {:noreply, state}
-  end
-
-  def ircsplit(str, pfxlen) do
-    str
-    |> String.split(" ")
-    |> Enum.chunk_while(
-      [],
-      fn ele, acc ->
-        if Enum.join(Enum.reverse([ele | acc]), " ") |> byte_size() > 512 - pfxlen do
-          {:cont, Enum.reverse(acc), [ele]}
-        else
-          {:cont, [ele | acc]}
-        end
-      end,
-      fn
-        [] -> {:cont, []}
-        acc -> {:cont, Enum.reverse(acc), []}
-      end
-    )
-    |> Enum.map(fn x -> Enum.join(x, " ") end)
-    |> Enum.map(fn x ->
-      case byte_size(x) do
-        n when is_integer(n) and n > 512 ->
-          x
-          |> String.to_charlist()
-          |> Enum.chunk_every(512 - pfxlen)
-          |> Enum.map(&List.to_string(&1))
-
-        _ ->
-          x
-      end
-    end)
-    |> List.flatten()
-    |> Enum.filter(&(&1 !== ""))
-  end
-
-  def discord_ircsplit(msg, nick, target) do
-    pfx = "PRIVMSG #{target} :" |> byte_size()
-    nkl = "<#{nick}> " |> byte_size()
-
-    msg
-    |> String.split("\n")
-    |> Enum.map(&ircsplit(&1, pfx + nkl))
-    |> List.flatten()
   end
 
   def handle_info({:discordmsg, msg}, state) do
@@ -114,17 +74,25 @@ defmodule Discordirc.IRC do
 
     case channel do
       {:ok, _, chan} ->
+        pfx = ":#{state.me} PRIVMSG #{chan} :" |> byte_size()
+        nkl = "<#{usr}> " |> byte_size()
+        prefixlen = pfx + nkl
         # irc messages can only be 512b in length 
         split_response =
           case response do
-            x when is_binary(x) ->
-              discord_ircsplit(x, usr, chan)
-
             x when is_list(x) ->
               x
-              |> Enum.map(&discord_ircsplit(&1, usr, chan))
-              |> List.flatten()
+
+            x when is_binary(x) ->
+              [x]
           end
+          |> Enum.map(fn x ->
+            x
+            |> String.split("\n")
+            |> Enum.map(&ircsplit(&1, prefixlen))
+            |> List.flatten()
+          end)
+          |> List.flatten()
 
         case split_response do
           x when is_binary(x) ->
@@ -172,6 +140,24 @@ defmodule Discordirc.IRC do
     {:noreply, state}
   end
 
+  def handle_info({:whois, whois = %Whois{:hostname => host}}, state) do
+    case whois do
+      %Whois{nick: n, user: user} when n == state.nick ->
+        me = "#{state.nick}!#{user}@#{host}"
+        Logger.debug("Setting host to #{me} #{inspect(whois)}")
+        {:noreply, %State{state | :me => me}}
+
+      _ ->
+        {:noreply, state}
+    end
+  end
+
+  def handle_info({:unrecognized, "396", %{args: args}}, state) do
+    Logger.debug("Received UnrealIRCD host change notification, double checking host")
+    Client.whois(state.client, state.nick)
+    {:noreply, state}
+  end
+
   def handle_info({:me, msg, %SenderInfo{:nick => nick}, channel}, state) do
     discordid = ChannelMap.discord(state.network, channel)
     fmsg = Formatter.from_irc(nick, msg, true)
@@ -203,7 +189,8 @@ defmodule Discordirc.IRC do
   #    {:noreply, state}
   #  end
 
-  def handle_info(_event, state) do
+  def handle_info(event, state) do
+    Logger.debug("unknown event: inspect output: " <> inspect(event))
     {:noreply, state}
   end
 
