@@ -31,8 +31,8 @@ defmodule Discordirc.WebhookService do
 
       case DiscordAPI.create_webhook(
              channel_id,
-             %{name: "discordirc hook", avatar: avatar},
-             "discordirc proxy hook"
+             %{name: "irc relay hook", avatar: avatar},
+             "irc relay hook"
            ) do
         {:ok, hook} ->
           case state.hooks do
