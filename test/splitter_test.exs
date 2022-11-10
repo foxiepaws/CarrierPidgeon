@@ -31,10 +31,11 @@ defmodule Discordirc.SplitterTest do
     irc_after_split = ircsplit(lorem_ipsum, prefix_len)
     assert irc_after_split == irc_result
 
-    assert Enum.map(irc_after_split, &byte_size(prefix <> &1)) |> Enum.map(&(&1 <= 512)) == [
-             true,
-             true
-           ]
+    assert Enum.map(irc_after_split, &byte_size(prefix <> &1 <> "\r\n")) |> Enum.map(&(&1 <= 512)) ==
+             [
+               true,
+               true
+             ]
   end
 
   test "ircsplit with emoji" do
@@ -57,10 +58,11 @@ defmodule Discordirc.SplitterTest do
     irc_after_split = ircsplit(lorem_ipsum, prefix_len)
     assert irc_after_split == irc_result
 
-    assert Enum.map(irc_after_split, &byte_size(prefix <> &1)) |> Enum.map(&(&1 <= 512)) == [
-             true,
-             true
-           ]
+    assert Enum.map(irc_after_split, &byte_size(prefix <> &1 <> "\r\n")) |> Enum.map(&(&1 <= 512)) ==
+             [
+               true,
+               true
+             ]
   end
 
   test "ircsplit only emoji" do
@@ -77,6 +79,10 @@ defmodule Discordirc.SplitterTest do
 
     irc_split = ircsplit(crabs, prefix_len)
     assert irc_split == good_split
-    assert Enum.map(irc_split, &byte_size(prefix <> &1)) |> Enum.map(&(&1 <= 512)) == [true, true]
+
+    assert Enum.map(irc_split, &byte_size(prefix <> &1 <> "\r\n")) |> Enum.map(&(&1 <= 512)) == [
+             true,
+             true
+           ]
   end
 end
