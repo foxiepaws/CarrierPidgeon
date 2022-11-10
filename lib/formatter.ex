@@ -70,6 +70,40 @@ defmodule Discordirc.Formatter do
   end
 
   def from_discord(
+        %{attachments: attachments, author: user, guild_id: guild, sticker_items: nil} = msg
+      ) do
+    usr =
+      case DiscordAPI.get_guild_member(guild, user.id) do
+        {:ok, %{nick: nick}} when is_binary(nick) -> nick
+        _ -> "#{user.username}\##{user.discriminator}"
+      end
+
+    cpart =
+      msg
+      |> fixdiscordidstrings
+      |> String.split("\n")
+
+    apart =
+      attachments
+      |> Enum.map(& &1.url)
+
+    messages =
+      (cpart ++ apart)
+      |> Enum.filter(&(&1 != ""))
+
+    # discord may give... many lines. split and format.
+    case Enum.count(messages) do
+      0 ->
+        {usr, "#{messages[0]}"}
+
+      _ ->
+        {usr,
+         messages
+         |> Enum.map(fn m -> "#{m}" end)}
+    end
+  end
+
+  def from_discord(
         %{attachments: attachments, author: user, guild_id: guild, sticker_items: stickers} = msg
       ) do
     usr =
