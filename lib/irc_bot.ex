@@ -70,37 +70,43 @@ defmodule Discordirc.IRC do
 
   def handle_info({:discordmsg, msg}, state) do
     channel = ChannelMap.irc(msg.channel_id)
-    {usr, response} = Formatter.from_discord(msg)
 
-    case channel do
-      {:ok, _, chan} ->
-        pfx = ":#{state.me} PRIVMSG #{chan} :" |> byte_size()
-        nkl = "<#{usr}> " |> byte_size()
-        prefixlen = pfx + nkl
-        # irc messages can only be 512b in length 
-        split_response =
-          case response do
-            x when is_list(x) ->
+    try do
+      {:ok, usr, response} = Formatter.from_discord(msg)
+
+      case channel do
+        {:ok, _, chan} ->
+          pfx = ":#{state.me} PRIVMSG #{chan} :" |> byte_size()
+          nkl = "<#{usr}> " |> byte_size()
+          prefixlen = pfx + nkl
+          # irc messages can only be 512b in length 
+          split_response =
+            case response do
+              x when is_list(x) ->
+                x
+
+              x when is_binary(x) ->
+                [x]
+            end
+            |> Enum.map(fn x ->
               x
-
-            x when is_binary(x) ->
-              [x]
-          end
-          |> Enum.map(fn x ->
-            x
-            |> String.split("\n")
-            |> Enum.map(&ircsplit(&1, prefixlen))
+              |> String.split("\n")
+              |> Enum.map(&ircsplit(&1, prefixlen))
+              |> List.flatten()
+            end)
             |> List.flatten()
-          end)
-          |> List.flatten()
 
-        case split_response do
-          x when is_binary(x) ->
-            ExIRC.Client.msg(state.client, :privmsg, chan, "<#{usr}> #{x}")
+          case split_response do
+            x when is_binary(x) ->
+              ExIRC.Client.msg(state.client, :privmsg, chan, "<#{usr}> #{x}")
 
-          x when is_list(x) ->
-            for m <- x, do: ExIRC.Client.msg(state.client, :privmsg, chan, "<#{usr}> #{m}")
-        end
+            x when is_list(x) ->
+              for m <- x, do: ExIRC.Client.msg(state.client, :privmsg, chan, "<#{usr}> #{m}")
+          end
+      end
+    rescue
+      e ->
+        Logger.error("TODO: handle errors instead of using exception\ne: #{inspect(e)}")
     end
 
     {:noreply, state}

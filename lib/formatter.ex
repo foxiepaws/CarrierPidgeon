@@ -72,11 +72,7 @@ defmodule Discordirc.Formatter do
   def from_discord(
         %{attachments: attachments, author: user, guild_id: guild, sticker_items: nil} = msg
       ) do
-    usr =
-      case DiscordAPI.get_guild_member(guild, user.id) do
-        {:ok, %{nick: nick}} when is_binary(nick) -> nick
-        _ -> "#{user.username}\##{user.discriminator}"
-      end
+    usr = DiscordInfo.get_nick_by_id(guild, user.id)
 
     cpart =
       msg
@@ -94,10 +90,10 @@ defmodule Discordirc.Formatter do
     # discord may give... many lines. split and format.
     case Enum.count(messages) do
       0 ->
-        {usr, "#{messages[0]}"}
+        {:error, "empty set"}
 
       _ ->
-        {usr,
+        {:ok, usr,
          messages
          |> Enum.map(fn m -> "#{m}" end)}
     end
@@ -106,11 +102,7 @@ defmodule Discordirc.Formatter do
   def from_discord(
         %{attachments: attachments, author: user, guild_id: guild, sticker_items: stickers} = msg
       ) do
-    usr =
-      case DiscordAPI.get_guild_member(guild, user.id) do
-        {:ok, %{nick: nick}} when is_binary(nick) -> nick
-        _ -> "#{user.username}\##{user.discriminator}"
-      end
+    usr = DiscordInfo.get_nick_by_id(guild, user.id)
 
     cpart =
       msg
@@ -132,10 +124,10 @@ defmodule Discordirc.Formatter do
     # discord may give... many lines. split and format.
     case Enum.count(messages) do
       0 ->
-        {usr, "#{messages[0]}"}
+        {:error, "empty set"}
 
       _ ->
-        {usr,
+        {:ok, usr,
          messages
          |> Enum.map(fn m -> "#{m}" end)}
     end

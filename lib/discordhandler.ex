@@ -13,18 +13,23 @@ defmodule Discordirc.DiscordHandler do
   def is_me_or_my_webhook(msg) do
     {:ok, me} = Api.get_current_user()
 
-    is_me = msg.author.username == me.username and msg.author.discriminator == me.discriminator
-    is_webhook = msg.webhook_id != nil
+    case msg do
+      %{author: %{username: u, discriminator: d}}
+      when u == me.username and d == me.discriminator ->
+        true
 
-    is_my_webhook =
-      if is_webhook do
-        {:ok, wh} = Api.get_webhook(msg.webhook_id)
-        wh.user.id == Nostrum.Snowflake.dump(me.id)
-      else
+      %{webhook_id: wh} ->
+        case Api.get_webhook(wh) do
+          {:ok, webhook} ->
+            webhook.user.id == Nostrum.Snowflake.dump(me.id)
+
+          {:error, e} ->
+            false
+        end
+
+      _ ->
         false
-      end
-
-    is_me or is_my_webhook
+    end
   end
 
   def handle_event({:MESSAGE_CREATE, msg, _ws_state}) do
