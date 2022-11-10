@@ -1,4 +1,6 @@
-# Discordirc
+# CarrierPidgeon
+
+Relay your discord server to irc via avian carrier. 
 
 ## Installation
 
