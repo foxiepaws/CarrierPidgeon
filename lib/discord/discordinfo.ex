@@ -1,4 +1,4 @@
-defmodule Discordirc.DiscordInfo do
+defmodule CarrierPidgeon.DiscordInfo do
   @moduledoc """
   helper functions for discord text things
   """

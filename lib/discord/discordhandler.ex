@@ -1,10 +1,10 @@
-defmodule Discordirc.DiscordHandler do
+defmodule CarrierPidgeon.DiscordHandler do
   @moduledoc """
   discord bot
   """
   use Nostrum.Consumer
   alias Nostrum.Api
-  alias Discordirc.ChannelMap
+  alias CarrierPidgeon.ChannelMap
 
   def start_link do
     Consumer.start_link(__MODULE__)

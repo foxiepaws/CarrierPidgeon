@@ -1,12 +1,12 @@
-defmodule Discordirc do
+defmodule CarrierPidgeon do
   @moduledoc """
   Entrypoint
   """
   use Application
 
-  alias Discordirc.IrcNetworkSupervisor
-  alias Discordirc.DiscordHandler
-  alias Discordirc.WebhookService
+  alias CarrierPidgeon.IrcNetworkSupervisor
+  alias CarrierPidgeon.DiscordHandler
+  alias CarrierPidgeon.WebhookService
 
   def start(_type, _args) do
     children = [

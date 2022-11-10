@@ -1,4 +1,4 @@
-defmodule Discordirc.WebhookService do
+defmodule CarrierPidgeon.WebhookService do
   @moduledoc """
   This module manages the webhooks that we output
   to discord channels with
@@ -25,7 +25,7 @@ defmodule Discordirc.WebhookService do
     end
 
     def create_hook(state, channel_id, retry \\ 0) do
-      avatar = Base.encode64(File.read!("defaultavatar.jpg"))
+      avatar = Base.encode64(File.read!("priv/defaultavatar.jpg"))
 
       case DiscordAPI.create_webhook(
              channel_id,

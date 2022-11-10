@@ -1,7 +1,7 @@
-defmodule Discordirc.SplitterTest do
+defmodule CarrierPidgeon.SplitterTest do
   use ExUnit.Case
-  import Discordirc.ByteSplit
-  doctest Discordirc.ByteSplit
+  import CarrierPidgeon.ByteSplit
+  doctest CarrierPidgeon.ByteSplit
 
   test "split by bytes" do
     assert byte_split("test", 2) == ["te", "st"]

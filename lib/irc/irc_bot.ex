@@ -1,10 +1,10 @@
-defmodule Discordirc.IRC do
+defmodule CarrierPidgeon.IRC do
   @moduledoc """
   IRC bot portion
   """
   use GenServer
   require Logger
-  import Discordirc.ByteSplit
+  import CarrierPidgeon.ByteSplit
 
   defmodule State do
     defstruct server: nil,
@@ -32,8 +32,8 @@ defmodule Discordirc.IRC do
   alias ExIRC.Client
   alias ExIRC.SenderInfo
   alias ExIRC.Whois
-  alias Discordirc.ChannelMap
-  alias Discordirc.Formatter
+  alias CarrierPidgeon.ChannelMap
+  alias CarrierPidgeon.Formatter
 
   def start_link(%{:network => network} = params) when is_map(params) do
     state = %State{State.from_params(params) | :channels => ChannelMap.getircchannels(network)}

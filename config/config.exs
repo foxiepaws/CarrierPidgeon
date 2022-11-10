@@ -1,6 +1,6 @@
 import Config
 
-config :discordirc,
+config :carrierpidgeon,
   channels: [
   ],
   networks: [

@@ -1,9 +1,9 @@
-defmodule Discordirc.MixProject do
+defmodule CarrierPidgeon.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :discordirc,
+      app: :carrierpidgeon,
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
@@ -15,7 +15,7 @@ defmodule Discordirc.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: {Discordirc, []},
+      mod: {CarrierPidgeon, []},
       extra_applications: [:logger]
     ]
   end

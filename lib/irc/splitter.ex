@@ -1,4 +1,4 @@
-defmodule Discordirc.ByteSplit do
+defmodule CarrierPidgeon.ByteSplit do
   @moduledoc """
   Module that splits text by bytes, Unicode Aware.
   """
