@@ -4,7 +4,7 @@ Relay your discord server to irc via avian carrier.
 
 ## Installation
 
-you need to configure this with a dev.exs like such
+you need to configure this with a dev.exs / prod.exs like such
 ```elixir
 import Config
 
@@ -32,13 +32,15 @@ config :nostrum,
 ```
 
 ## Running
-This is still in heavy development so i haven't handled running it as
-a release or anything special like that you can still run it with iex.
+```shell
+$ MIX_ENV="prod" mix run --no-halt
+```
+
+if you're going to be hacking on it, or want the ability to update without restarting, I recommend you run it in iex.
 
 ```shell
 $ iex -S mix
 ```
 
-This does have advantages, for example, if you need to upgrade your
-bot you can just type `recompile` and update it without restarting.
+to update your bot while running in iex just type `recompile`.
 
