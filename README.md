@@ -2,7 +2,7 @@
 
 ## Installation
 
-you need to configure this with a config.exs
+you need to configure this with a dev.exs like such
 ```elixir
 import Config
 
@@ -26,10 +26,7 @@ config :discordirc,
   ]
 
 config :nostrum,
-  # The token of your bot as a string
-  token: "666",
-  # The number of shards you want to run your bot under, or :auto.
-  num_shards: :auto
+  token: "YOUR TOKEN HERE",
 ```
 
 ## Running

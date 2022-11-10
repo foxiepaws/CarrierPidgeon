@@ -1,0 +1,30 @@
+* DONE warning: variable "nick" is unused (if the variable is not meant to be used, prefix it with an underscore) lib/formatter.ex:10: Discordirc.Formatter.from_irc/3
+CLOSED: [2022-11-10 Thu 12:51]
+* DONE warning: variable "e" is unused (if the variable is not meant to be used, prefix it with an underscore)  lib/discordhandler.ex:26: Discordirc.DiscordHandler.is_me_or_my_webhook/1
+CLOSED: [2022-11-10 Thu 12:51]
+* DONE warning: variable "me" is unused (if the variable is not meant to be used, prefix it with an underscore)  lib/discordhandler.ex:36: Discordirc.DiscordHandler.handle_event/1
+CLOSED: [2022-11-10 Thu 12:51]
+* DONE warning: unused alias DiscordAPI  lib/formatter.ex:5
+CLOSED: [2022-11-10 Thu 12:58]
+* DONE warning: variable "e" is unused (if the variable is not meant to be used, prefix it with an underscore)  lib/webhookservice.ex:96: Discordirc.WebhookService.handle_info/2
+CLOSED: [2022-11-10 Thu 12:53]
+* DONE warning: variable "e" is unused (if the variable is not meant to be used, prefix it with an underscore)  lib/webhookservice.ex:99: Discordirc.WebhookService.handle_info/2
+CLOSED: [2022-11-10 Thu 12:53]
+* DONE warning: variable "users" is unused (if the variable is not meant to be used, prefix it with an underscore)  lib/irc_bot.ex:115: Discordirc.IRC.handle_info/1
+CLOSED: [2022-11-10 Thu 12:57]
+* DONE warning: variable "users" is unused (if the variable is not meant to be used, prefix it with an underscore)  lib/irc_bot.ex:118: Discordirc.IRC.handle_info/1
+CLOSED: [2022-11-10 Thu 12:57]
+* DONE warning: variable "modestr" is unused (if the variable is not meant to be used, prefix it with an underscore)  lib/irc_bot.ex:121: Discordirc.IRC.handle_info/1
+CLOSED: [2022-11-10 Thu 12:57]
+* DONE warning: variable "topic" is unused (if the variable is not meant to be used, prefix it with an underscore)  lib/irc_bot.ex:124: Discordirc.IRC.handle_info/1
+CLOSED: [2022-11-10 Thu 12:57]
+* DONE warning: clauses with the same name should be grouped together, "def handle_info/2" was previously defined (lib/irc_bot.ex:64)  lib/irc_bot.ex:127
+CLOSED: [2022-11-10 Thu 12:56]
+* DONE warning: unused alias ApiError  lib/webhookservice.ex:10
+CLOSED: [2022-11-10 Thu 12:59]
+* DONE warning: unused alias DiscordCache  lib/webhookservice.ex:9
+CLOSED: [2022-11-10 Thu 12:59]
+* DONE warning: variable "args" is unused (if the variable is not meant to be used, prefix it with an underscore)  lib/irc_bot.ex:161: Discordirc.IRC.handle_info/2
+CLOSED: [2022-11-10 Thu 12:58]
+* DONE warning: unused alias DiscordAPI   lib/irc_bot.ex:37
+CLOSED: [2022-11-10 Thu 12:58]
