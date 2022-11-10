@@ -4,23 +4,17 @@ defmodule Discordirc do
   """
   use Application
 
-  alias Discordirc.IRC
+  alias Discordirc.IrcNetworkSupervisor
+  alias Discordirc.DiscordHandler
+  alias Discordirc.WebhookService
 
   def start(_type, _args) do
-    import Supervisor.Spec
+    children = [
+      {DiscordHandler, []},
+      {WebhookService, []},
+      {IrcNetworkSupervisor, []}
+    ]
 
-    ircnets =
-      Application.get_env(:discordirc, :networks)
-      |> Enum.map(fn net -> worker(IRC, [net], id: net.network) end)
-
-    children =
-      ircnets ++
-        [
-          Discordirc.DiscordHandler,
-          Discordirc.WebhookService
-        ]
-
-    options = [strategy: :one_for_one, name: Discordirc.Supervisor]
-    Supervisor.start_link(children, options)
+    Supervisor.start_link(children, strategy: :one_for_one)
   end
 end
