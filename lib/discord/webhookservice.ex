@@ -29,7 +29,7 @@ defmodule CarrierPidgeon.WebhookService do
 
       case DiscordAPI.create_webhook(
              channel_id,
-             %{name: "irc relay hook", avatar: avatar},
+             %{name: "CarrierPidgeon relay hook", avatar: avatar},
              "irc relay hook"
            ) do
         {:ok, hook} ->
@@ -45,28 +45,72 @@ defmodule CarrierPidgeon.WebhookService do
         {:error, e} ->
           case e.response.code do
             10_003 ->
-              raise "unknown channel"
+              {:error, "unknown channel", state}
 
             30_007 when retry < 1 ->
               clear_old_hooks(channel_id)
               create_hook(state, channel_id, retry + 1)
 
             30_007 when retry >= 1 ->
-              raise "too many webhooks"
+              {:error, "too many webhooks", state}
 
             40_001 ->
-              raise "no permissions"
+              {:error, "no permissions", state}
 
             50_035 ->
-              raise "invalid form body"
+              {:error, "invalid form body", state}
           end
+      end
+    end
+
+    def get_my_webhook(channel_id) do
+      case DiscordAPI.get_channel_webhooks(channel_id) do
+        {:ok, webhooks} ->
+          me =
+            webhooks
+            |> Enum.filter(fn wh ->
+              wh.user.id == Nostrum.Snowflake.dump(DiscordAPI.get_current_user!().id)
+            end)
+            |> List.first()
+
+          case me do
+            nil ->
+              {:error, "webhook doesn't exist"}
+
+            x ->
+              {:ok, me}
+
+            _ ->
+              {:error, "webhook doesn't exist"}
+          end
+
+        _ ->
+          {:error, "couldn't get channel webhooks"}
+      end
+    end
+
+    def create_or_get_existing(state, channel_id) do
+      case get_my_webhook(channel_id) do
+        {:ok, wh} ->
+          case state.hooks do
+            nil ->
+              {:ok, %State{state | :hooks => %{channel_id => wh}}}
+
+            %{} ->
+              hooks = Map.put(state.hooks, channel_id, wh)
+              {:ok, %State{state | :hooks => hooks}}
+          end
+
+        {:error, _e} ->
+          create_hook(state, channel_id)
       end
     end
 
     def get_channel_hook(state, channel_id) do
       case state.hooks[channel_id] do
         nil ->
-          {:ok, newstate} = create_hook(state, channel_id)
+          # the hook doesn't exist in state, we need to recache it.
+          {:ok, newstate} = create_or_get_existing(state, channel_id)
           get_channel_hook(newstate, channel_id)
 
         x ->
@@ -89,7 +133,16 @@ defmodule CarrierPidgeon.WebhookService do
     args = %{tts: false, username: msgargs.nick, avatar_url: nil, content: msgargs.content}
 
     try do
-      DiscordAPI.execute_webhook(wh.id, wh.token, args)
+      case DiscordAPI.execute_webhook(wh.id, wh.token, args) do
+        {:ok} ->
+          :noop
+
+        {:error, %{response: %{code: 50035}}} ->
+          DiscordAPI.create_message(
+            msgargs.channel_id,
+            content: "<#{msgargs.nick}> #{msgargs.content}"
+          )
+      end
     rescue
       e in MatchError ->
         Logger.warn("MatchError from nostrum workaround in place. e: #{inspect(e)}")
