@@ -6,8 +6,6 @@ defmodule Discordirc.WebhookService do
   use GenServer
   require Logger
   alias Nostrum.Api, as: DiscordAPI
-  alias Nostrum.Cache, as: DiscordCache
-  alias Nostrum.Error.ApiError
 
   defmodule State do
     defstruct hooks: nil
@@ -94,10 +92,10 @@ defmodule Discordirc.WebhookService do
       DiscordAPI.execute_webhook(wh.id, wh.token, args)
     rescue
       e in MatchError ->
-        Logger.warn("MatchError from nostrum workaround in place.")
+        Logger.warn("MatchError from nostrum workaround in place. e: #{inspect(e)}")
 
       e in FunctionClauseError ->
-        Logger.warn("FunctionClauseError from nostrum workaround in place.")
+        Logger.warn("FunctionClauseError from nostrum workaround in place. #{inspect(e)}")
     end
 
     {:noreply, state}

@@ -2,12 +2,11 @@ defmodule Discordirc.Formatter do
   @moduledoc """
   Transforms messages to/from discord from/to irc
   """
-  alias Nostrum.Api, as: DiscordAPI
   alias Discordirc.DiscordInfo
 
   @discordcdn "https://cdn.discordapp.com/"
 
-  def from_irc(nick, msg, ctcp \\ false) do
+  def from_irc(_nick, msg, ctcp \\ false) do
     # strip or replace IRC formatting.
     fmsg =
       msg

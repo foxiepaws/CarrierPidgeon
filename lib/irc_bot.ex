@@ -34,7 +34,6 @@ defmodule Discordirc.IRC do
   alias ExIRC.Whois
   alias Discordirc.ChannelMap
   alias Discordirc.Formatter
-  alias Nostrum.Api, as: DiscordAPI
 
   def start_link(%{:network => network} = params) when is_map(params) do
     state = %State{State.from_params(params) | :channels => ChannelMap.getircchannels(network)}
@@ -66,6 +65,67 @@ defmodule Discordirc.IRC do
     Client.whois(state.client, state.nick)
     for c <- state.channels, do: Client.join(state.client, c)
     {:noreply, state}
+  end
+
+  def handle_info({:connected, server, port}, state) do
+    Logger.debug("Connected to #{server}:#{port}")
+    Logger.debug("Logging to #{server}:#{port} as #{state.nick}..")
+    Client.logon(state.client, state.pass, state.nick, state.user, state.name)
+    {:noreply, state}
+  end
+
+  def handle_info({:received, msg, %SenderInfo{:nick => nick}, channel}, state) do
+    discordid = ChannelMap.discord(state.network, channel)
+    fmsg = Formatter.from_irc(nick, msg, false)
+
+    case discordid do
+      {:ok, x} ->
+        send(
+          :WebhookService,
+          {:irc, %{channel_id: x, nick: "#{nick}@#{state.network}", content: fmsg}}
+        )
+    end
+
+    {:noreply, state}
+  end
+
+  def handle_info({:whois, whois = %Whois{:hostname => host}}, state) do
+    case whois do
+      %Whois{nick: n, user: user} when n == state.nick ->
+        me = "#{state.nick}!#{user}@#{host}"
+        Logger.debug("Setting host to #{me} #{inspect(whois)}")
+        {:noreply, %State{state | :me => me}}
+
+      _ ->
+        {:noreply, state}
+    end
+  end
+
+  def handle_info({:unrecognized, "396", %{args: _args}}, state) do
+    Logger.debug("Received UnrealIRCD host change notification, double checking host")
+    Client.whois(state.client, state.nick)
+    {:noreply, state}
+  end
+
+  def handle_info({:me, msg, %SenderInfo{:nick => nick}, channel}, state) do
+    discordid = ChannelMap.discord(state.network, channel)
+    fmsg = Formatter.from_irc(nick, msg, true)
+
+    case discordid do
+      {:ok, x} ->
+        send(
+          :WebhookService,
+          {:irc, %{channel_id: x, nick: "#{nick}@#{state.network}", content: fmsg}}
+        )
+    end
+
+    {:noreply, state}
+  end
+
+  # lets try using the supervisor instead... 
+  def handle_info(:disconnected, state) do
+    Logger.debug("Disconnected, throwing self to hell.")
+    {:stop, "disconnection", state}
   end
 
   def handle_info({:discordmsg, msg}, state) do
@@ -112,89 +172,23 @@ defmodule Discordirc.IRC do
     {:noreply, state}
   end
 
-  def handle_info({:discord_cmd, :kick, users}) do
-  end
-
-  def handle_info({:discord_cmd, :ban, users}) do
-  end
-
-  def handle_info({:discord_cmd, :mode, modestr}) do
-  end
-
-  def handle_info({:discord_cmd, :topic, topic}) do
-  end
-
-  def handle_info({:connected, server, port}, state) do
-    Logger.debug("Connected to #{server}:#{port}")
-    Logger.debug("Logging to #{server}:#{port} as #{state.nick}..")
-    Client.logon(state.client, state.pass, state.nick, state.user, state.name)
+  def handle_info({:discord_cmd, :kick, _users}, state) do
     {:noreply, state}
   end
 
-  def handle_info({:received, msg, %SenderInfo{:nick => nick}, channel}, state) do
-    discordid = ChannelMap.discord(state.network, channel)
-    fmsg = Formatter.from_irc(nick, msg, false)
-
-    case discordid do
-      {:ok, x} ->
-        send(
-          :WebhookService,
-          {:irc, %{channel_id: x, nick: "#{nick}@#{state.network}", content: fmsg}}
-        )
-    end
-
+  def handle_info({:discord_cmd, :ban, _users}, state) do
     {:noreply, state}
   end
 
-  def handle_info({:whois, whois = %Whois{:hostname => host}}, state) do
-    case whois do
-      %Whois{nick: n, user: user} when n == state.nick ->
-        me = "#{state.nick}!#{user}@#{host}"
-        Logger.debug("Setting host to #{me} #{inspect(whois)}")
-        {:noreply, %State{state | :me => me}}
-
-      _ ->
-        {:noreply, state}
-    end
-  end
-
-  def handle_info({:unrecognized, "396", %{args: args}}, state) do
-    Logger.debug("Received UnrealIRCD host change notification, double checking host")
-    Client.whois(state.client, state.nick)
+  def handle_info({:discord_cmd, :mode, _modestr}, state) do
     {:noreply, state}
   end
 
-  def handle_info({:me, msg, %SenderInfo{:nick => nick}, channel}, state) do
-    discordid = ChannelMap.discord(state.network, channel)
-    fmsg = Formatter.from_irc(nick, msg, true)
-
-    case discordid do
-      {:ok, x} ->
-        send(
-          :WebhookService,
-          {:irc, %{channel_id: x, nick: "#{nick}@#{state.network}", content: fmsg}}
-        )
-    end
-
+  def handle_info({:discord_cmd, :topic, _topic}, state) do
     {:noreply, state}
   end
 
-  # lets try using the supervisor instead... 
-  def handle_info(:disconnected, state) do
-    Logger.debug("Disconnected, throwing self to hell.")
-    {:stop, "disconnection", state}
-  end
-
-  #  def handle_info(:disconnected, state) do
-  #    if state.ssl? do
-  #      Client.connect_ssl!(state.client, state.server, state.port)
-  #    else
-  #      Client.connect!(state.client, state.server, state.port)
-  #    end
-  #
-  #    {:noreply, state}
-  #  end
-
+  # this MUST be the last handle_info.
   def handle_info(event, state) do
     Logger.debug("unknown event: inspect output: " <> inspect(event))
     {:noreply, state}

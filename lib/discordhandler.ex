@@ -23,7 +23,7 @@ defmodule Discordirc.DiscordHandler do
           {:ok, webhook} ->
             webhook.user.id == Nostrum.Snowflake.dump(me.id)
 
-          {:error, e} ->
+          {:error, _e} ->
             false
         end
 
@@ -33,8 +33,6 @@ defmodule Discordirc.DiscordHandler do
   end
 
   def handle_event({:MESSAGE_CREATE, msg, _ws_state}) do
-    {:ok, me} = Api.get_current_user()
-
     unless is_me_or_my_webhook(msg) do
       case ChannelMap.irc(msg.channel_id) do
         {:ok, net, _} ->
