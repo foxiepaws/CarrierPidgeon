@@ -5,6 +5,8 @@ defmodule Discordirc.Formatter do
   alias Nostrum.Api, as: DiscordAPI
   alias Discordirc.DiscordInfo
 
+  @discordcdn "https://cdn.discordapp.com/"
+
   def from_irc(nick, msg, ctcp \\ false) do
     # strip or replace IRC formatting.
     fmsg =
@@ -67,9 +69,9 @@ defmodule Discordirc.Formatter do
     |> do_replace(matches)
   end
 
-  def from_discord(msg) do
-    %{attachments: attachments, author: user, guild_id: guild} = msg
-
+  def from_discord(
+        %{attachments: attachments, author: user, guild_id: guild, sticker_items: stickers} = msg
+      ) do
     usr =
       case DiscordAPI.get_guild_member(guild, user.id) do
         {:ok, %{nick: nick}} when is_binary(nick) -> nick
@@ -85,8 +87,12 @@ defmodule Discordirc.Formatter do
       attachments
       |> Enum.map(& &1.url)
 
+    spart =
+      stickers
+      |> Enum.map(fn s -> "#{@discordcdn}stickers/#{s.id}.png" end)
+
     messages =
-      (cpart ++ apart)
+      (cpart ++ apart ++ spart)
       |> Enum.filter(&(&1 != ""))
 
     # discord may give... many lines. split and format.
