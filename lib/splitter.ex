@@ -8,6 +8,7 @@ defmodule Discordirc.ByteSplit do
   @doc """
   split a string into a number `bytes`, optionally subtracting a number of `hold` bytes for prefix/suffix
   """
+
   def byte_split(str, bytes, hold \\ 0) do
     case byte_size(str) do
       n when is_integer(n) and n > bytes ->
