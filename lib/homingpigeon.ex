@@ -1,12 +1,12 @@
-defmodule CarrierPidgeon do
+defmodule HomingPigeon do
   @moduledoc """
   Entrypoint
   """
   use Application
 
-  alias CarrierPidgeon.IrcNetworkSupervisor
-  alias CarrierPidgeon.DiscordHandler
-  alias CarrierPidgeon.WebhookService
+  alias HomingPigeon.IrcNetworkSupervisor
+  alias HomingPigeon.DiscordHandler
+  alias HomingPigeon.WebhookService
 
   def start(_type, _args) do
     children = [

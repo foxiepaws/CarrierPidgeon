@@ -1,8 +1,8 @@
-defmodule CarrierPidgeon.Formatter do
+defmodule HomingPigeon.Formatter do
   @moduledoc """
   Transforms messages to/from discord from/to irc
   """
-  alias CarrierPidgeon.DiscordInfo
+  alias HomingPigeon.DiscordInfo
 
   @discordcdn "https://cdn.discordapp.com/"
 

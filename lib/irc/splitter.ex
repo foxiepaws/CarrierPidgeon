@@ -1,4 +1,4 @@
-defmodule CarrierPidgeon.ByteSplit do
+defmodule HomingPigeon.ByteSplit do
   @moduledoc """
   Module that splits text by bytes, Unicode Aware.
   """

@@ -1,4 +1,4 @@
-# CarrierPidgeon
+# Homing Pigeon
 
 Relay your discord server to irc via avian carrier. 
 
@@ -8,7 +8,7 @@ you need to configure this with a dev.exs / prod.exs like such
 ```elixir
 import Config
 
-config :discordirc,
+config :homingpigeon,
   channels: [
     %{ircnetwork: "net1",
       ircchannel: "#mychannel",

@@ -1,10 +1,10 @@
-defmodule CarrierPidgeon.ChannelMap do
+defmodule HomingPigeon.ChannelMap do
   @moduledoc """
   maps discord channels to irc channels
   """
   def discord(network, channel) do
     id =
-      Application.fetch_env!(:carrierpidgeon, :channels)
+      Application.fetch_env!(:homingpigeon, :channels)
       |> Enum.filter(&(&1.ircnetwork == network and &1.ircchannel == channel))
       |> List.first()
 
@@ -19,7 +19,7 @@ defmodule CarrierPidgeon.ChannelMap do
 
   def irc(id) do
     channel =
-      Application.fetch_env!(:carrierpidgeon, :channels)
+      Application.fetch_env!(:homingpigeon, :channels)
       |> Enum.filter(&(&1.discordid == id))
       |> List.first()
 
@@ -33,7 +33,7 @@ defmodule CarrierPidgeon.ChannelMap do
   end
 
   def getircchannels(network) do
-    Application.fetch_env!(:carrierpidgeon, :channels)
+    Application.fetch_env!(:homingpigeon, :channels)
     |> Enum.filter(&(&1.ircnetwork == network))
     |> Enum.map(& &1.ircchannel)
   end

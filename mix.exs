@@ -1,9 +1,9 @@
-defmodule CarrierPidgeon.MixProject do
+defmodule HomingPigeon.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :carrierpidgeon,
+      app: :homingpigeon,
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
@@ -15,7 +15,7 @@ defmodule CarrierPidgeon.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: {CarrierPidgeon, []},
+      mod: {HomingPigeon, []},
       extra_applications: [:logger]
     ]
   end

@@ -1,6 +1,6 @@
 import Config
 
-config :carrierpidgeon,
+config :homingpigeon,
   channels: [
   ],
   networks: [

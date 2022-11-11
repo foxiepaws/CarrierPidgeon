@@ -1,11 +1,11 @@
-defmodule CarrierPidgeon.IrcNetworkSupervisor do
+defmodule HomingPigeon.IrcNetworkSupervisor do
   @moduledoc """
   Supervises all of the IRC networks.
   """
 
   use Supervisor
 
-  alias CarrierPidgeon.IRC
+  alias HomingPigeon.IRC
 
   def start_link(init_arg) do
     Supervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
@@ -14,7 +14,7 @@ defmodule CarrierPidgeon.IrcNetworkSupervisor do
   @impl true
   def init(_init_arg) do
     networks =
-      Application.get_env(:carrierpidgeon, :networks)
+      Application.get_env(:homingpigeon, :networks)
       |> Enum.map(&%{start: {IRC, :start_link, [&1]}, id: &1.network})
 
     Supervisor.init(networks, strategy: :one_for_one)

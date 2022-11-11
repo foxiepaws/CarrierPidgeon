@@ -1,4 +1,4 @@
-defmodule CarrierPidgeon.WebhookService do
+defmodule HomingPigeon.WebhookService do
   @moduledoc """
   This module manages the webhooks that we output
   to discord channels with
@@ -29,7 +29,7 @@ defmodule CarrierPidgeon.WebhookService do
 
       case DiscordAPI.create_webhook(
              channel_id,
-             %{name: "CarrierPidgeon relay hook", avatar: avatar},
+             %{name: "HomingPigeon relay hook", avatar: avatar},
              "irc relay hook"
            ) do
         {:ok, hook} ->

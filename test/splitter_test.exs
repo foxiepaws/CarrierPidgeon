@@ -1,7 +1,7 @@
-defmodule CarrierPidgeon.SplitterTest do
+defmodule HomingPigeon.SplitterTest do
   use ExUnit.Case
-  import CarrierPidgeon.ByteSplit
-  doctest CarrierPidgeon.ByteSplit
+  import HomingPigeon.ByteSplit
+  doctest HomingPigeon.ByteSplit
 
   test "split by bytes" do
     assert byte_split("test", 2) == ["te", "st"]
